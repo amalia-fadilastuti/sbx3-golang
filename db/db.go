@@ -9,14 +9,14 @@ import (
 )
 
 type Department struct {
-	DepartmentId   int64
-	DepartmentName string
+	DepartmentId   int64  `json:"departmentId"`
+	DepartmentName string `json:"departmentName"`
 }
 
 type Employee struct {
-	EmployeeId   int64
-	EmployeeName string
-	DepartmentId int64
+	EmployeeId   int64  `json:"employeeId"`
+	EmployeeName string `json:"employeeName"`
+	DepartmentId int64  `json:"departmentId"`
 }
 
 func CreateConnection() (*sql.DB, error) {
@@ -139,6 +139,30 @@ func ViewDepartment(db *sql.DB) ([]Department, error) {
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("employeesByDepartment %v", err)
+	}
+	return departments, nil
+}
+
+// viewDepartment view queries for all departments.
+func ViewDepartmentById(db *sql.DB, departmentId int64) ([]Department, error) {
+	// An departments slice to hold data from returned rows.
+	var departments []Department
+
+	rows, err := db.Query("SELECT * FROM department WHERE department_id = (?)", departmentId)
+	if err != nil {
+		return nil, fmt.Errorf("viewDepartment %v", err)
+	}
+	defer rows.Close()
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var dept Department
+		if err := rows.Scan(&dept.DepartmentId, &dept.DepartmentName); err != nil {
+			return nil, fmt.Errorf("ViewDepartmentById %v", err)
+		}
+		departments = append(departments, dept)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ViewDepartmentById %v", err)
 	}
 	return departments, nil
 }
